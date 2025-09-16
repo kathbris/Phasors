@@ -1,0 +1,191 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+    <title>Phasor Addition</title>
+    <!-- STYLESHEET LINKS START -->
+    <link rel="stylesheet" media="screen" href="screen.css">
+    <!-- STYLESHEET LINKS START -->
+    </head><body id="mse">
+    <h1>Phasor Addition</h1>
+    <h2>Solve for the resultant phasor.</h2>
+    <button onClick="window.location.reload();">New Question</button>
+    <form name="testform" action="" method="GET">
+    <div>
+        <canvas id="myCanvas" height = 375 width = 500></canvas>
+    </div>
+    <div class="row">
+        <div class="column">
+    	    <p id="phasors"></p>
+            <p><b>Resultant:</b><br>
+            <label for="calculation">Magnitude:</label><br>
+            <input id="calculation" type="number" name="calculation" value="" input="checkx1"><br>
+            <label for="calculation2">Angle:</label><br>
+            <input id="calculation2" type="number" name="calculation2" value="" input="checkx2"><br>
+            <input id="button" type="button" name="button" value="Submit" onclick="testButton(this.form)"><br>
+            </p>
+        </div>
+        <div class="column">
+            <p id="bhelp"></p>
+        </div>
+    </div>
+    </form>
+<script>
+    function randomRangeWithIncrements(min, max, inc) {
+        min = min || 0;
+        inc = inc || 1;
+        if(!max) { return new Error('need to define a max');}
+        return Math.floor(Math.random() * (max - min) / inc) * inc + min;
+    }
+    function toRadians(degrees) {
+        return degrees*(Math.PI/180);
+    }
+    function toDegrees(radians) {
+        return radians/(Math.PI/180);
+    }
+    function withinRange(check, response){
+        var lowRange = Number(check)*.99;
+        var hiRange = Number(check)*1.01;
+        if (response > lowRange && response < hiRange){
+        return true
+        } else {
+        return false          
+        }        
+    }
+    var hChart = [];
+    var yChart = [];
+    var canvas = document.querySelector("#myCanvas");
+    var context = canvas.getContext("2d");
+    context.font = "11px Arial";
+    context.fillStyle = "black";
+    context.textAlign = "center";
+    context.textBaseline = "top";
+    context.lineWidth = 1;
+    context.beginPath();
+    context.moveTo(150,0);
+    context.lineTo(150,300);
+    context.stroke();
+    context.beginPath();
+    context.moveTo(0,150);
+    context.lineTo(300,150);
+    context.stroke();
+    var phasorQ = randomRangeWithIncrements(2,4,1);
+    var ph = phasorQ;
+    var phValues = [];
+    var h = 0;
+    var v = 0;
+    while (phasorQ > 0){
+        var phasorQ = phasorQ -1;
+        var mag1 = randomRangeWithIncrements(75,250,1);
+        var angle1 = randomRangeWithIncrements(0,359,1);
+        drawPhasor(mag1,angle1,'black');
+        hChart.push([mag1+"@"+angle1+"\u00B0",hvchart(mag1,angle1).a,hvchart(mag1,angle1).o]);
+        phValues.push(" "+mag1+"@"+angle1+"\u00B0");
+        var h = h+Number(mag1*Math.cos(toRadians(angle1)));
+        var v = v+Number(mag1*Math.sin(toRadians(angle1)));
+    }
+    document.getElementById("phasors").innerHTML ="Add the following "+ph+" phasors;<br>"+phValues
+    function hvchart(givenmag,givenangle){
+        var o = Math.round(givenmag*Math.sin(toRadians(givenangle))*100)/100;
+        var a = Math.round(givenmag*Math.cos(toRadians(givenangle))*100)/100;
+        return{a,o}        
+    }
+    function drawPhasor(givenmag, givenangle,lineColour){
+        var o = Math.round(givenmag* Math.sin(toRadians(givenangle))*100)/200;
+        var a = Math.round(givenmag*Math.cos(toRadians(givenangle))*100)/200;
+        var tox = a+150;
+        var toy = -o+150;
+        var fromx = 150;
+        var fromy = 150;
+        var x_center = tox;
+        var y_center = toy;
+        var r= 5;
+        var angle;
+        var x;
+        var y;
+        var drawangle = Math.round(toDegrees(Math.atan(o/a))*100)/100;
+        if (a<1 && drawangle != 90){
+            var drawangle = drawangle+180;  
+        } else if (a>1 && o<1) {
+            var drawangle = drawangle +360;
+        }
+        context.fillStyle = "black";
+        context.strokeStyle = lineColour;
+        context.beginPath();
+        context.moveTo(fromx,fromy);
+        context.lineTo(tox,toy);
+        context.stroke();
+        var label = Math.round(Math.sqrt(Math.pow(o*2,2)+Math.pow(a*2,2)))+'@'+drawangle+'\u00B0';
+        context.fillText(label,tox+10,toy+10);
+        context.fillStyle = lineColour;
+        angle = Math.atan2(toy-fromy,tox-fromx)
+        x = r*Math.cos(angle) + x_center;
+        y = r*Math.sin(angle) + y_center;
+
+        context.moveTo(x, y);
+
+        angle += (1/3)*(2*Math.PI)
+        x = r*Math.cos(angle) + x_center;
+        y = r*Math.sin(angle) + y_center;
+
+        context.lineTo(x, y);
+
+        angle += (1/3)*(2*Math.PI)
+        x = r*Math.cos(angle) + x_center;
+        y = r*Math.sin(angle) + y_center;
+
+        context.lineTo(x, y);
+
+        context.closePath();
+        context.stroke();
+        context.fill();
+    }
+    function testButton(form){
+        var magResponse = Number(form.calculation.value);
+        var angleResponse = Number(form.calculation2.value);
+        var magAnswer = Math.sqrt(Math.pow(h,2)+Math.pow(v,2));    
+        var angleAnswer = toDegrees(Math.atan(v/h));
+        if (h<1){
+            var angleAnswer = angleAnswer+180;  
+        } else if (h>1 && v<1) {
+            var angleAnswer = angleAnswer +360;
+        }
+        if (withinRange(Number(magAnswer),magResponse) && withinRange(Number(angleAnswer),angleResponse)){
+            document.getElementById("bhelp").innerHTML ="<h3>Correct</h3>"
+            drawPhasor(Number(form.calculation.value),Number(form.calculation2.value),'#00FF00');
+        } else {
+            document.getElementById("bhelp").innerHTML ="<h3>Incorrect</h3>"
+        
+        hChart.push(["<b>"+Math.round(magAnswer*100)/100+"@"+Math.round(angleAnswer*100)/100+"\u00B0 </b>","<b>"+Math.round(h*100)/100+"</b>","<b>"+Math.round(v*100)/100+"</b>"])
+        var table = document.createElement('table');
+
+            //create Table Header
+            var header = ['Polar', 'Horizontal', 'Vertical' ];
+            var tr=document.createElement('tr');
+            for(var column in header)
+            {   
+            var th=document.createElement('th');
+            th.innerHTML = header[column];
+            tr.appendChild(th)
+            }
+            table.appendChild(tr);
+
+            //create Table Body
+
+            for(var row in hChart)
+            {
+                var tr=document.createElement('tr');
+                for(var column in hChart[row]){
+                
+                    var td=document.createElement('td');
+                    td.innerHTML = hChart[row][column];
+                    tr.appendChild(td)
+                    
+                }
+                table.appendChild(tr);
+            }
+
+            // append Table
+            document.body.appendChild(table);
+        }
+    }
+
+</script>
+</body></html>
